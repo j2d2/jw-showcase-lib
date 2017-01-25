@@ -168,7 +168,7 @@
                     return getFeedFailed(response);
                 }
 
-                feed.slug     = utils.slugify(feed.title);
+                feed.slug     = utils.slugify(feed.title, feed.feedid);
                 feed.playlist = feed.playlist
                     .map(function (item, index) {
 
@@ -177,7 +177,7 @@
                         }
 
                         item.$key     = index + item.mediaid;
-                        item.slug     = utils.slugify(item.title);
+                        item.slug     = utils.slugify(item.title, item.mediaid);
                         item.feedSlug = feed.slug;
 
                         return item;

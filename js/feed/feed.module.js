@@ -41,9 +41,9 @@
             });
 
         seoProvider
-            .state('root.feed', ['$stateParams', 'config', 'dataStore', function ($stateParams, config, dataStore) {
+            .state('root.feed', ['$stateParams', 'config', 'dataStore', 'utils', function ($stateParams, config, dataStore, utils) {
 
-                var feed = dataStore.getFeedBySlug($stateParams.feedSlug);
+                var feed = dataStore.getFeed(utils.getIdFromSlug($stateParams.feedSlug));
 
                 return {
                     title:       config.siteName + ' | ' + feed.title,
@@ -53,9 +53,9 @@
 
         ////////////
 
-        resolveFeed.$inject = ['$stateParams', '$q', 'dataStore', 'preload'];
-        function resolveFeed ($stateParams, $q, dataStore) {
-            return dataStore.getFeedBySlug($stateParams.feedSlug) || $q.reject();
+        resolveFeed.$inject = ['$stateParams', '$q', 'dataStore', 'utils', 'preload'];
+        function resolveFeed ($stateParams, $q, dataStore, utils) {
+            return dataStore.getFeedBySlug(utils.getIdFromSlug($stateParams.feedSlug)) || $q.reject();
         }
     }
 }());

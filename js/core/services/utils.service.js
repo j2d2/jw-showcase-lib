@@ -48,6 +48,7 @@
         this.replaceImageSize       = replaceImageSize;
         this.copyToClipboard        = copyToClipboard;
         this.slugify                = slugify;
+        this.getIdFromSlug          = getIdFromSlug;
 
         ////////////////////////
 
@@ -275,21 +276,39 @@
         /**
          * Slugify string
          * @param text
+         * @param id
          * @returns {*}
          */
-        function slugify (text) {
+        function slugify (text, id) {
+
+            var result = '';
 
             if (angular.isDefined(text)) {
 
-                return text.toString().toLowerCase()
+                 result = text.toString().toLowerCase()
                     .replace(/\s+/g, '-')
                     .replace(/[^\w\-]+/g, '')
                     .replace(/\-\-+/g, '-')
                     .replace(/^-+/, '')
                     .replace(/-+$/, '');
+
+                return result + '-' + id
             }
 
-            return '';
+            return result;
+        }
+
+        /**
+         * Get id from slug
+         *
+         * @param slug
+         * @returns {*}
+         */
+        function getIdFromSlug (slug) {
+
+            return slug
+                .split('-')
+                .pop();
         }
     }
 

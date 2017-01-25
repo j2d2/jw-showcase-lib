@@ -46,9 +46,9 @@
             });
 
         seoProvider
-            .state('root.video', ['$stateParams', 'config', 'dataStore', function ($stateParams, config, dataStore) {
+            .state('root.video', ['$stateParams', 'config', 'dataStore', 'utils', function ($stateParams, config, dataStore, utils) {
 
-                var item = dataStore.getItemBySlug($stateParams.itemSlug, $stateParams.feedSlug);
+                var item = dataStore.getItem(utils.getIdFromSlug($stateParams.itemSlug), utils.getIdFromSlug($stateParams.feedSlug));
 
                 return {
                     title:       config.siteName + ' | ' + item.title,
@@ -59,14 +59,14 @@
 
         /////////////////
 
-        resolveItem.$inject = ['$stateParams', '$q', 'dataStore', 'preload'];
-        function resolveItem ($stateParams, $q, dataStore) {
-            return dataStore.getItemBySlug($stateParams.itemSlug, $stateParams.feedSlug) || $q.reject();
+        resolveItem.$inject = ['$stateParams', '$q', 'dataStore', 'utils', 'preload'];
+        function resolveItem ($stateParams, $q, dataStore, utils) {
+            return dataStore.getItem(utils.getIdFromSlug($stateParams.itemSlug), utils.getIdFromSlug($stateParams.feedSlug)) || $q.reject();
         }
 
-        resolveFeed.$inject = ['$stateParams', '$q', 'dataStore', 'preload'];
-        function resolveFeed ($stateParams, $q, dataStore) {
-            return dataStore.getFeedBySlug($stateParams.feedSlug) || $q.reject();
+        resolveFeed.$inject = ['$stateParams', '$q', 'dataStore', 'utils', 'preload'];
+        function resolveFeed ($stateParams, $q, dataStore, utils) {
+            return dataStore.getFeed(utils.getIdFromSlug($stateParams.feedSlug)) || $q.reject();
         }
     }
 
