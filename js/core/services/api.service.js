@@ -28,9 +28,10 @@
      * @requires $http
      * @requires $q
      * @requires jwShowcase.config
+     * @requires jwShowcase.utils
      */
-    apiService.$inject = ['$http', '$q', 'config'];
-    function apiService ($http, $q, config) {
+    apiService.$inject = ['$http', '$q', 'config', 'utils'];
+    function apiService ($http, $q, config, utils) {
 
         /**
          * @ngdoc method
@@ -167,6 +168,7 @@
                     return getFeedFailed(response);
                 }
 
+                feed.slug     = utils.slugify(feed.title);
                 feed.playlist = feed.playlist
                     .map(function (item, index) {
 
@@ -174,7 +176,9 @@
                             item.feedid = feed.feedid;
                         }
 
-                        item.$key = index + item.mediaid;
+                        item.$key     = index + item.mediaid;
+                        item.slug     = utils.slugify(item.title);
+                        item.feedSlug = feed.slug;
 
                         return item;
                     })
