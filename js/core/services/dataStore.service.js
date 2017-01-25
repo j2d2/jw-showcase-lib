@@ -118,9 +118,34 @@
                 return;
             }
 
-            item = feed.playlist.find(function (item) {
-                return item.mediaid === mediaId;
-            });
+            item = feed.playlist.find(byKey('mediaid', mediaId));
+
+            return item ? angular.extend({}, item) : undefined;
+        }.bind(this);
+
+        /**
+         * @ngdoc method
+         * @name jwShowcase.core.dataStore#getItemBySlug
+         * @methodOf jwShowcase.core.dataStore
+         *
+         * @description
+         * Return item with the given slug.
+         *
+         * @param {string} itemSlug Slug of the item
+         * @param {string} feedSlug Slug of the feed
+         *
+         * @returns {jwShowcase.core.item|undefined} Found item or undefined when not found
+         */
+        this.getItemBySlug = function (itemSlug, feedSlug) {
+
+            var feed = this.getFeedBySlug(feedSlug),
+                item;
+
+            if (!feed) {
+                return;
+            }
+
+            item = feed.playlist.find(byKey('slug', itemSlug));
 
             return item ? angular.extend({}, item) : undefined;
         }.bind(this);
@@ -149,7 +174,7 @@
 
             // make items unique by mediaid
             items = items.filter(function (item, index, collection) {
-                return collection.findIndex(byMediaId(item.mediaid)) === index;
+                return collection.findIndex(byKey('mediaid', item.mediaid)) === index;
             });
 
             return items;
@@ -180,21 +205,49 @@
             // concat watchlist and watchProgress feeds
             allFeeds = allFeeds.concat([this.watchlistFeed, this.watchProgressFeed]);
 
-            feed = allFeeds.find(function (feed) {
-                return feed.feedid === feedId;
-            });
+            feed = allFeeds.find(byKey('feedid', feedId));
 
             return feed ? angular.extend({}, feed) : undefined;
         }.bind(this);
 
         /**
-         * @param mediaId
+         * @ngdoc method
+         * @name jwShowcase.core.dataStore#getFeed
+         * @methodOf jwShowcase.core.dataStore
+         *
+         * @description
+         * Return feed with the given slug.
+         *
+         * @param {string} slug Slug of the feed
+         *
+         * @returns {jwShowcase.core.feed|undefined} Found feed or undefined when not found
+         */
+        this.getFeedBySlug = function (slug) {
+
+            var allFeeds = this.feeds,
+                feed;
+
+            if (this.featuredFeed) {
+                allFeeds = allFeeds.concat([this.featuredFeed]);
+            }
+
+            // concat watchlist and watchProgress feeds
+            allFeeds = allFeeds.concat([this.watchlistFeed, this.watchProgressFeed]);
+
+            feed = allFeeds.find(byKey('slug', slug));
+
+            return feed ? angular.extend({}, feed) : undefined;
+        }.bind(this);
+
+        /**
+         * @param key
+         * @param value
          * @returns {Function}
          */
-        function byMediaId (mediaId) {
+        function byKey (key, value) {
 
             return function (item) {
-                return item.mediaid === mediaId;
+                return item[key] === value;
             }
         }
     }
