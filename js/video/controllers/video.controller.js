@@ -109,7 +109,7 @@
 
             if (!!window.cordova) {
                 vm.playerSettings.analytics = {
-                    sdkplatform:    ionic.Platform.isAndroid() ? 1 : 2
+                    sdkplatform: ionic.Platform.isAndroid() ? 1 : 2
                 };
             }
 
@@ -332,14 +332,14 @@
             }
 
             // update $viewHistory
-            stateParams.feedId  = newItem.feedid;
-            stateParams.mediaId = newItem.mediaid;
+            stateParams.feedslug = newItem.feedSlug;
+            stateParams.itemSlug = newItem.slug;
 
             // update state, but don't notify
             $state
                 .go('root.video', {
-                    feedId:    newItem.feedid,
-                    mediaId:   newItem.mediaid,
+                    feedSlug:  newItem.feedSlug,
+                    itemSlug:  newItem.slug,
                     autoStart: true
                 }, {
                     notify: false
@@ -537,9 +537,9 @@
                 return;
             }
 
-            vm.item             = item;
-            stateParams.mediaId = vm.item.mediaid;
-            stateParams.feedId  = item.feedid;
+            vm.item              = item;
+            stateParams.itemSlug = vm.item.slug;
+            stateParams.feedSlug = item.feedSlug;
 
             if (item.feedid !== itemFeed.feedid) {
 
@@ -560,8 +560,8 @@
 
             $state
                 .go('root.video', {
-                    feedId:    item.feedid,
-                    mediaId:   item.mediaid,
+                    feedSlug:  item.feedSlug,
+                    itemSlug:  item.slug,
                     autoStart: clickedOnPlay
                 }, {
                     notify: false

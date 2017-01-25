@@ -67,8 +67,8 @@
         function cardClickHandler (item, clickedOnPlay) {
 
             $state.go('root.video', {
-                feedId:    item.feedid,
-                mediaId:   item.mediaid,
+                feedSlug:  item.feedSlug,
+                itemSlug:  item.slug,
                 autoStart: clickedOnPlay || ionic.Platform.isMobile
             });
         }

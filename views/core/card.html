@@ -4,7 +4,7 @@
     <jw-card-poster src="vm.posterUrl"></jw-card-poster>
   </div>
 
-  <a ui-sref="root.video({mediaId: vm.item.mediaid, feedId: vm.item.feedid})" class="jw-card-container"
+  <a ui-sref="root.video({itemSlug: vm.item.slug, feedSlug: vm.item.feedSlug})" class="jw-card-container"
       ng-click="vm.clickHandler($event, false)" tabindex="-1">
     <div class="jw-card-controls">
       <div class="jw-card-controls-align">

@@ -32,7 +32,7 @@
 
         $stateProvider
             .state('root.video', {
-                url:            '/video/:feedId/:mediaId',
+                url:            '/video/:feedSlug/:itemSlug',
                 controller:     'VideoController as vm',
                 templateUrl:    'views/video/video.html',
                 resolve:        {
@@ -48,7 +48,7 @@
         seoProvider
             .state('root.video', ['$stateParams', 'config', 'dataStore', function ($stateParams, config, dataStore) {
 
-                var item = dataStore.getItem($stateParams.mediaId, $stateParams.feedId);
+                var item = dataStore.getItemBySlug($stateParams.itemSlug, $stateParams.feedSlug);
 
                 return {
                     title:       config.siteName + ' | ' + item.title,
@@ -61,12 +61,12 @@
 
         resolveItem.$inject = ['$stateParams', '$q', 'dataStore', 'preload'];
         function resolveItem ($stateParams, $q, dataStore) {
-            return dataStore.getItem($stateParams.mediaId, $stateParams.feedId) || $q.reject();
+            return dataStore.getItemBySlug($stateParams.itemSlug, $stateParams.feedSlug) || $q.reject();
         }
 
         resolveFeed.$inject = ['$stateParams', '$q', 'dataStore', 'preload'];
         function resolveFeed ($stateParams, $q, dataStore) {
-            return dataStore.getFeed($stateParams.feedId) || $q.reject();
+            return dataStore.getFeedBySlug($stateParams.feedSlug) || $q.reject();
         }
     }
 

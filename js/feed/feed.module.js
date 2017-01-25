@@ -32,7 +32,7 @@
 
         $stateProvider
             .state('root.feed', {
-                url:         '/feed/:feedId',
+                url:         '/feed/:feedSlug',
                 controller:  'FeedController as vm',
                 templateUrl: 'views/feed/feed.html',
                 resolve:     {
@@ -43,7 +43,7 @@
         seoProvider
             .state('root.feed', ['$stateParams', 'config', 'dataStore', function ($stateParams, config, dataStore) {
 
-                var feed = dataStore.getFeed($stateParams.feedId);
+                var feed = dataStore.getFeedBySlug($stateParams.feedSlug);
 
                 return {
                     title:       config.siteName + ' | ' + feed.title,
@@ -55,7 +55,7 @@
 
         resolveFeed.$inject = ['$stateParams', '$q', 'dataStore', 'preload'];
         function resolveFeed ($stateParams, $q, dataStore) {
-            return dataStore.getFeed($stateParams.feedId) || $q.reject();
+            return dataStore.getFeedBySlug($stateParams.feedSlug) || $q.reject();
         }
     }
 }());
