@@ -1,10 +1,10 @@
 {
-  "name": "jw-showcase-lib",
-  "description": "JW Showcase library",
+  "name": "j2d2-jw-showcase-lib",
+  "description": "Fork of JW Showcase library",
   "version": "3.0.1",
   "dependencies": {},
   "repository": {
-    "url": "https://github.com/jwplayer/jw-showcase-lib.git"
+    "url": "https://github.com/j2d2/jw-showcase-lib.git"
   },
   "license": "Apache-2.0",
   "devDependencies": {
