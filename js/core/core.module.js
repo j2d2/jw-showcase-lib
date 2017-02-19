@@ -45,11 +45,15 @@
                 templateUrl: 'views/core/root.html'
             })
             .state('preloadError', {
-                templateUrl: 'views/core/preloadError.html'
+                templateUrl: 'views/error/configError.html'
             })
-            .state('root.404', {
-                url:         '/404',
-                templateUrl: 'views/core/404.html'
+            .state('root.videoNotFound', {
+                url:         '/video-not-found',
+                templateUrl: 'views/error/videoNotFound.html'
+            })
+            .state('root.feedNotFound', {
+                url:         '/feed-not-found',
+                templateUrl: 'views/error/feedNotFound.html'
             });
 
         seoProvider
@@ -103,7 +107,7 @@
                 .then(function (resolvedConfig) {
 
                     var feedPromises = [],
-                        model;
+                        model, promise;
 
                     // apply config
                     angular.forEach(resolvedConfig, function (value, key) {
@@ -135,7 +139,16 @@
 
                         dataStore.feeds = config.playlists.map(function (feedId) {
                             model = new FeedModel(feedId);
-                            feedPromises.push(apiConsumer.populateFeedModel(model));
+                            promise = apiConsumer
+                                .populateFeedModel(model)
+                                .then(null, function (error) {
+
+                                    // show error, but resolve so we can wait for all feeds to be loaded
+                                    console.error(error);
+                                    return $q.resolve();
+                                });
+
+                            feedPromises.push(promise);
                             return model;
                         });
                     }
@@ -143,7 +156,7 @@
                     // don't wait for the feeds but we want to populate the watchlist and watchProgress feeds after
                     // feeds are loaded
                     $q.all(feedPromises)
-                        .then(handleFeedsLoadSuccess, handleFeedsLoadError);
+                        .then(handleFeedsLoadSuccess);
 
                     api.getPlayer(config.player)
                         .then(handlePreloadSuccess, handlePreloadError);
@@ -177,12 +190,6 @@
                 watchlist.restore();
                 watchProgress.restore();
             }
-
-            function handleFeedsLoadError () {
-
-                console.log(arguments);
-                // @TODO Show error message?
-            }
         }
     }
 
@@ -208,12 +215,16 @@
 
             // prevent loop if something is wrong in preloadError or root.404 state
 
-            if (toState.name === 'preloadError' || toState.name === 'root.404') {
+            if (toState.name === 'preloadError' || toState.name === 'root.videoNotFound' ||
+                toState.name === 'root.feedNotFound') {
                 return;
             }
 
-            if (toState.name === 'root.feed' || toState.name === 'root.video') {
-                $state.go('root.404');
+            if (toState.name === 'root.feed') {
+                $state.go('root.feedNotFound');
+            }
+            else if (toState.name === 'root.video') {
+                $state.go('root.videoNotFound');
             }
             else if (toState.name !== 'root.dashboard') {
                 $state.go('root.dashboard');
