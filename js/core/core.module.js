@@ -29,10 +29,15 @@
         .config(config)
         .run(run);
 
-    config.$inject = ['$stateProvider', 'seoProvider', '$ionicConfigProvider'];
-    function config ($stateProvider, seoProvider, $ionicConfigProvider) {
+    config.$inject = ['$stateProvider', '$urlMatcherFactoryProvider', 'seoProvider', '$ionicConfigProvider'];
+    function config ($stateProvider, $urlMatcherFactoryProvider, seoProvider, $ionicConfigProvider) {
 
-        ionic.Platform.isMobile = ionic.Platform.isIOS() || ionic.Platform.isAndroid() || ionic.Platform.isWindowsPhone();
+        var platform = ionic.Platform;
+
+        platform.isMobile = platform.isIOS() || platform.isAndroid() || platform.isWindowsPhone();
+
+        $urlMatcherFactoryProvider
+            .strictMode(false);
 
         $stateProvider
             .state('root', {
@@ -41,20 +46,15 @@
                     preload: preloadApp
                 },
                 templateUrl: 'views/core/root.html'
-            })
-            .state('preloadError', {
-                templateUrl: 'views/core/preloadError.html'
-            })
-            .state('root.404', {
-                url:         '/404',
-                templateUrl: 'views/core/404.html'
             });
 
+
         seoProvider
-            .otherwise(['config', function (config) {
+            .otherwise(['$location', 'config', function ($location, config) {
                 return {
                     title:       config.siteName,
-                    description: config.description
+                    description: config.description,
+                    canonical:   $location.absUrl()
                 };
             }]);
 
@@ -83,8 +83,11 @@
          *
          * @returns {$q.promise}
          */
-        preloadApp.$inject = ['$q', '$sce', '$state', 'appStore', 'config', 'configResolver', 'cookies', 'api', 'apiConsumer', 'watchlist', 'watchProgress', 'userSettings', 'DEFAULT_CONTENT_SERVICE'];
-        function preloadApp ($q, $sce, $state, appStore, config, configResolver, cookies, api, apiConsumer, watchlist, watchProgress, userSettings, DEFAULT_CONTENT_SERVICE) {
+        preloadApp.$inject = ['$q', '$sce', '$state', 'appStore', 'config', 'configResolver', 'cookies', 'api',
+            'apiConsumer', 'dataStore', 'FeedModel', 'watchlist', 'watchProgress', 'userSettings',
+            'DEFAULT_CONTENT_SERVICE'];
+        function preloadApp ($q, $sce, $state, appStore, config, configResolver, cookies, api, apiConsumer, dataStore,
+                             FeedModel, watchlist, watchProgress, userSettings, DEFAULT_CONTENT_SERVICE) {
 
             var defer = $q.defer();
 
@@ -97,7 +100,8 @@
                 .getConfig()
                 .then(function (resolvedConfig) {
 
-                    var promises = [];
+                    var feedPromises = [],
+                        model, promise;
 
                     // apply config
                     angular.forEach(resolvedConfig, function (value, key) {
@@ -110,7 +114,7 @@
                         }
                     });
 
-                    if (!angular.isString(config.contentService)) {
+                    if (!config.contentService) {
                         config.contentService = DEFAULT_CONTENT_SERVICE;
                     }
 
@@ -118,20 +122,47 @@
                         document.body.style.backgroundColor = config.backgroundColor;
                     }
 
-                    promises.push(api.getPlayer(config.player));
-
-                    if (config.featuredPlaylist) {
-                        promises.push(apiConsumer.getFeaturedFeed());
+                    if (false === config.enableHeader) {
+                        document.body.classList.add('jw-flag-no-header');
                     }
 
-                    if (config.playlists) {
-                        promises.push(apiConsumer.getFeeds());
+                    if (angular.isDefined(config.enableJsScroll)) {
+                        $ionicConfigProvider.scrolling.jsScrolling(config.enableJsScroll);
                     }
 
-                    $q.all(promises).then(
-                        handlePreloadSuccess,
-                        handlePreloadError
-                    );
+                    if (angular.isString(config.featuredPlaylist) && config.featuredPlaylist !== '') {
+                        model = new FeedModel(config.featuredPlaylist);
+
+                        feedPromises.push(apiConsumer.populateFeedModel(model));
+                        dataStore.featuredFeed = model;
+                    }
+
+                    if (angular.isArray(config.playlists)) {
+
+                        dataStore.feeds = config.playlists.map(function (feedId) {
+                            model   = new FeedModel(feedId);
+                            promise = apiConsumer
+                                .populateFeedModel(model)
+                                .then(null, function (error) {
+
+                                    // show error, but resolve so we can wait for all feeds to be loaded
+                                    console.error(error);
+                                    return $q.resolve();
+                                });
+
+                            feedPromises.push(promise);
+                            return model;
+                        });
+                    }
+
+                    // don't wait for the feeds but we want to populate the watchlist and watchProgress feeds after
+                    // feeds are loaded
+                    $q.all(feedPromises)
+                        .then(handleFeedsLoadSuccess);
+
+                    api.getPlayer(config.player)
+                        .then(handlePreloadSuccess, handlePreloadError);
+
                 }, handlePreloadError);
 
             return defer.promise;
@@ -140,10 +171,7 @@
 
             function handlePreloadSuccess () {
 
-                watchlist.restore();
-                watchProgress.restore();
                 userSettings.restore();
-
                 cookies.showIfNeeded();
 
                 defer.resolve();
@@ -151,12 +179,19 @@
 
             function handlePreloadError (error) {
 
-                appStore.loading      = false;
-                appStore.preloadError = error;
+                appStore.loading = false;
 
-                $state.go('preloadError');
+                $state.go('error', {
+                    message: error.message
+                });
 
                 defer.reject();
+            }
+
+            function handleFeedsLoadSuccess () {
+
+                watchlist.restore();
+                watchProgress.restore();
             }
         }
     }
@@ -164,29 +199,38 @@
     run.$inject = ['$rootScope', '$state', 'config'];
     function run ($rootScope, $state, config) {
 
-        $rootScope.$on('$stateChangeStart', function (event, toState) {
+        if ('ontouchstart' in window || (window.DocumentTouch && document instanceof window.DocumentTouch)) {
+            angular.element(document.body).addClass('platform-touch');
+        }
+
+        $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState) {
 
             // prevent users going to search page when no searchPlaylist is defined
             if (toState.name === 'root.search' && !config.searchPlaylist) {
-                $state.go('root.dashboard');
                 event.preventDefault();
+                $state.go('root.dashboard');
             }
         });
 
         $rootScope.$on('$stateChangeError', function (event, toState) {
 
+            var name = toState.name;
+
             event.preventDefault();
 
-            // prevent loop if something is wrong in preloadError or root.404 state
+            // prevent loop if something is wrong in error or root.404 state
 
-            if (toState.name === 'preloadError' || toState.name === 'root.404') {
+            if (name === 'error' || name === 'root.videoNotFound' || name === 'root.feedNotFound') {
                 return;
             }
 
-            if (toState.name === 'root.feed' || toState.name === 'root.video') {
-                $state.go('root.404');
+            if (name === 'root.feed') {
+                $state.go('root.feedNotFound');
             }
-            else if (toState.name !== 'root.dashboard') {
+            else if (name === 'root.video') {
+                $state.go('root.videoNotFound');
+            }
+            else if (name !== 'root.dashboard') {
                 $state.go('root.dashboard');
             }
         });

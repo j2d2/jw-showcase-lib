@@ -25,16 +25,21 @@
     angular
         .module('jwShowcase', [
             'jwShowcase.core',
+            'jwShowcase.error',
             'jwShowcase.dashboard',
             'jwShowcase.feed',
             'jwShowcase.search',
             'jwShowcase.video'
         ])
         .value('config', {
-            enableContinueWatching: true
+            enableContinueWatching: true,
+            enableCookieNotice:     false,
+            enableFeaturedText:     true,
+            enablePlayerAutoFocus:  true,
+            enableHeader:           true
         })
         .decorator('$controller', $controllerDecorator)
-        .constant('LIB_VERSION', '3.0.1');
+        .constant('LIB_VERSION', '3.1.0');
 
     /**
      * @name jwShowcase.config
@@ -48,6 +53,9 @@
      * @property {string}      footerText
      * @property {string}      backgroundColor
      * @property {boolean}     enableContinueWatching
+     * @property {boolean}     enableCookieNotice
+     * @property {boolean}     enableFeaturedText
+     * @property {boolean}     enablePlayerAutoFocus
      * @property {string}      searchPlaylist
      * @property {string}      recommendationsPlaylist
      * @property {string}      featuredPlaylist
@@ -73,7 +81,7 @@
             }
 
             return $delegate.apply(null, arguments);
-        }
+        };
     }
 
 }());

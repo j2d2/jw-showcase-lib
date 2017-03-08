@@ -16,7 +16,7 @@
 
 (function () {
 
-    var SEO_PROPERTIES = ['title', 'description', 'image'];
+    var SEO_PROPERTIES = ['title', 'description', 'image', 'canonical'];
 
     angular
         .module('jwShowcase.core')
@@ -105,7 +105,8 @@
 
             var service = {
                 metadata:   {},
-                initialize: initialize
+                initialize: initialize,
+                update:     update
             };
 
             return service;
@@ -124,6 +125,19 @@
                 $rootScope.$on('$stateChangeSuccess', function (event, toState) {
                     updateMetadata(toState.name);
                 });
+
+                updateMetadata($state.current.name);
+            }
+
+            /**
+             * @ngdoc function
+             * @name jwShowcase.core.seo#update
+             * @methodOf jwShowcase.core.seo
+             *
+             * @description
+             * Update seo properties manually.
+             */
+            function update () {
 
                 updateMetadata($state.current.name);
             }
@@ -149,7 +163,7 @@
                 }
 
                 if (angular.isFunction(metadata) || angular.isArray(metadata)) {
-                    metadata = $injector.invoke(metadata);
+                    metadata = $injector.invoke(metadata, this, $state.$current.locals.globals);
                 }
 
                 angular.forEach(SEO_PROPERTIES, function (property) {
@@ -170,6 +184,8 @@
                     case 'image':
                         updateFBMetaContent('image', value);
                         break;
+                    case 'canonical':
+                        updateCanonicalHref(value);
                     }
                 });
             }
@@ -185,6 +201,20 @@
             }
 
             /**
+             * Update canonical href
+             *
+             * @param {string} href The new canonical URL
+             */
+            function updateCanonicalHref (href) {
+
+                var canonicalTag = document.querySelector('link[rel=canonical]');
+
+                if (canonicalTag) {
+                    canonicalTag.href = href;
+                }
+            }
+
+            /**
              * Update meta tag by name attribute
              *
              * @param {string} name     The name attribute of the meta tag
@@ -192,7 +222,11 @@
              */
             function updateMetaContent (name, content) {
 
-                document.querySelector('meta[name=' + name + ']').content = content;
+                var metaTag = document.querySelector('meta[name=' + name + ']');
+
+                if (metaTag) {
+                    metaTag.content = content;
+                }
             }
 
             /**
@@ -203,7 +237,11 @@
              */
             function updateFBMetaContent (property, content) {
 
-                document.querySelector('meta[property="og:' + property + '"]').content = content;
+                var metaTag = document.querySelector('meta[property="og:' + property + '"]');
+
+                if (metaTag) {
+                    metaTag.content = content;
+                }
             }
         }
     }

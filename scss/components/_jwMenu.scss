@@ -38,7 +38,7 @@
     }
 
     .jw-menu-list {
-        padding: 0 25px 20px 46px;
+        padding: 0 25px 40px 46px;
 
         .jw-button {
             width: 100%;
@@ -62,10 +62,14 @@
                 opacity: 0.25;
             }
 
+            .jw-button-label {
+                width: 100%;
+            }
+
             .jwy-icon {
                 display: none;
                 position: absolute;
-                top: 7px;
+                top: 5px;
                 right: -2px;
                 font-size: rem(20px);
             }
@@ -94,7 +98,7 @@
         .handle {
             top: 7px;
             border: 1px solid $disabled-color;
-            box-shadow: 0 0 5px rgba($black, 0.35)
+            box-shadow: 0 0 5px rgba($black, 0.35);
         }
 
         input:checked + .track .handle {
